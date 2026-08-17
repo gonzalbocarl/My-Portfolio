@@ -22,17 +22,22 @@ const gallery=document.querySelector('.project-gallery');
 if(gallery){
   let down=false,startX=0,scrollStart=0,moved=false;
   gallery.addEventListener('pointerdown',(event)=>{
+    if(event.pointerType==='mouse'&&event.button!==0)return;
     down=true;moved=false;startX=event.clientX;scrollStart=gallery.scrollLeft;
     gallery.setPointerCapture?.(event.pointerId);
   });
   gallery.addEventListener('pointermove',(event)=>{
     if(!down)return;
-    if(Math.abs(event.clientX-startX)>6)moved=true;
-    gallery.scrollLeft=scrollStart-(event.clientX-startX);
+    const delta=event.clientX-startX;
+    if(Math.abs(delta)>6)moved=true;
+    gallery.scrollLeft=scrollStart-delta;
   });
-  gallery.addEventListener('pointerup',()=>down=false);
-  gallery.addEventListener('pointercancel',()=>down=false);
-  gallery.addEventListener('click',(event)=>{if(moved){event.preventDefault();event.stopPropagation();moved=false}},true);
+  const release=()=>{down=false};
+  gallery.addEventListener('pointerup',release);
+  gallery.addEventListener('pointercancel',release);
+  gallery.addEventListener('click',(event)=>{
+    if(moved){event.preventDefault();event.stopPropagation();moved=false}
+  },true);
 }
 
 const cards=[...document.querySelectorAll('.gallery-image-card')];
@@ -55,15 +60,18 @@ const showLightbox=(index)=>{
   document.body.style.overflow='hidden';
   closeButton?.focus();
 };
+
 const closeLightbox=()=>{
   lightbox.classList.remove('is-open');
   lightbox.setAttribute('aria-hidden','true');
   document.body.style.overflow='';
+  lightboxImage.removeAttribute('src');
   lastFocused?.focus();
 };
 
 cards.forEach((card,index)=>card.addEventListener('click',()=>{
-  lastFocused=card;showLightbox(index);
+  lastFocused=card;
+  showLightbox(index);
 }));
 document.querySelector('.lightbox-close')?.addEventListener('click',closeLightbox);
 document.querySelector('.lightbox-prev')?.addEventListener('click',()=>showLightbox(current-1));
